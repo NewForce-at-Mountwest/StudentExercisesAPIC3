@@ -30,7 +30,7 @@ namespace StudentExercises.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get(string FirstName, int Limit)
+        public async Task<IActionResult> Get()
         {
             using (SqlConnection conn = Connection)
             {
@@ -38,18 +38,8 @@ namespace StudentExercises.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
 
-                    string query = @"SELECT s.Id, s.FirstName, s.LastName, s.SlackHandle, s.Specialty, CohortId, c.Id AS 'Cohort Id', c.Name AS 'Cohort Name' FROM Instructor s
-                                        JOIN Cohort c on s.CohortId = c.Id ";
-                    if (Limit != 0)
-                    {
-                        query = $@"SELECT TOP {Limit} s.Id, s.FirstName, s.LastName, s.SlackHandle, s.Specialty, s.CohortId, c.Id AS 'Cohort Id', c.Name AS 'Cohort Name' FROM Instructor s
-                                        JOIN Cohort c on s.CohortId = c.Id ";
-                    }
-                    if (FirstName != null)
-                    {
-                        query += $"WHERE s.FirstName Like '{FirstName}%'";
-                    }
-                    cmd.CommandText = query;
+                    
+                    cmd.CommandText = @"SELECT i.Id, i.FirstName, i.LastName, i.SlackHandle, i.CohortId, c.Id AS 'Cohort Id', c.Name AS 'Cohort Name' FROM Instructor i JOIN Cohort c on i.CohortId = c.Id ";
                     SqlDataReader reader = cmd.ExecuteReader();
                     List<Instructor> instructors = new List<Instructor>();
 
@@ -61,7 +51,6 @@ namespace StudentExercises.Controllers
                             FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
                             LastName = reader.GetString(reader.GetOrdinal("LastName")),
                             SlackHandle = reader.GetString(reader.GetOrdinal("SlackHandle")),
-                            Specialty= reader.GetString(reader.GetOrdinal("Specialty")),
                             CohortId = reader.GetInt32(reader.GetOrdinal("CohortId")),
                             CurrentCohort = new Cohort
                             {
