@@ -38,20 +38,19 @@ namespace StudentExercises.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
 
-                    
+
                     cmd.CommandText = @"SELECT Cohort.Name, Cohort.Id,
-Student.Id AS 'Student Id', Student.FirstName AS 'Student FirstName', Student.LastName AS 'Student LastName', Student.SlackHandle AS 'Student SlackHandle', Student.CohortId AS 'Student CohortId',
-Instructor.Id AS 'Instructor Id', Instructor.FirstName AS 'Instructor FirstName', Instructor.LastName AS 'Instructor LastName', Instructor.SlackHandle AS 'Instructor SlackHandle', Instructor.CohortId AS 'Instuctor CohortId'
+Student.Id AS 'Student Id', Student.FirstName AS 'Student First Name', Student.LastName AS 'Student LastName', Student.SlackHandle AS 'Student SlackHandle', Student.CohortId AS 'Student CohortId',
+Instructor.Id AS 'Instructor Id', Instructor.FirstName AS 'Instructor FirstName', Instructor.LastName AS 'Instructor LastName', Instructor.SlackHandle AS 'Instructor SlackHandle', Instructor.CohortId AS 'Instructor CohortId'
 FROM Cohort 
 LEFT JOIN Student ON Cohort.Id = Student.CohortId
 LEFT JOIN Instructor ON Cohort.Id = Instructor.CohortId";
                     SqlDataReader reader = cmd.ExecuteReader();
                     List<Cohort> cohortList = new List<Cohort>();
-                    
+
 
                     while (reader.Read())
                     {
-
 
                         Cohort currentCohortInLoop = new Cohort
                         {
@@ -59,64 +58,68 @@ LEFT JOIN Instructor ON Cohort.Id = Instructor.CohortId";
                             Name = reader.GetString(reader.GetOrdinal("Name"))
                         };
 
-                        Student currentStudent = null;
-                        if (!reader.IsDBNull(reader.GetOrdinal("Student Id"))){
-                            currentStudent = new Student
+                        Student currentStudentInLoop = null;
+                        if (!reader.IsDBNull(reader.GetOrdinal("Student Id")))
+                        {
+                            currentStudentInLoop = new Student
                             {
                                 Id = reader.GetInt32(reader.GetOrdinal("Student Id")),
-                                FirstName = reader.GetString(reader.GetOrdinal("Student FirstName")),
+                                FirstName = reader.GetString(reader.GetOrdinal("Student First Name")),
                                 LastName = reader.GetString(reader.GetOrdinal("Student LastName")),
                                 SlackHandle = reader.GetString(reader.GetOrdinal("Student SlackHandle")),
                                 CohortId = reader.GetInt32(reader.GetOrdinal("Student CohortId")),
 
                             };
+
                         }
 
-                        Instructor currentInstructor = null;
+
+                        Instructor currentInstructorInLoop = null;
                         if (!reader.IsDBNull(reader.GetOrdinal("Instructor Id")))
                         {
-                            currentInstructor = new Instructor
+                            currentInstructorInLoop = new Instructor
                             {
                                 Id = reader.GetInt32(reader.GetOrdinal("Instructor Id")),
                                 FirstName = reader.GetString(reader.GetOrdinal("Instructor FirstName")),
                                 LastName = reader.GetString(reader.GetOrdinal("Instructor LastName")),
                                 SlackHandle = reader.GetString(reader.GetOrdinal("Instructor SlackHandle")),
-                                CohortId = reader.GetInt32(reader.GetOrdinal("Instuctor CohortId")),
+                                CohortId = reader.GetInt32(reader.GetOrdinal("Instructor CohortId")),
 
                             };
+
                         }
 
 
-                        // Check if this cohort is already in cohort list
-                        // If not, I wanna add it
-                        // If so, don't add
-                        if (!cohortList.Any(singleCohortInList => singleCohortInList.Id == currentCohortInLoop.Id))
+
+
+                        // Check if cohort is already in the list
+                        // If it's NOT in the list, we can add it
+                        // If it is in the list, do something else 
+                        if (!cohortList.Any(c => c.Id == currentCohortInLoop.Id))
                         {
-                            currentCohortInLoop.StudentList.Add(currentStudent);
-                            currentCohortInLoop.InstructorList.Add(currentInstructor);
+                            currentCohortInLoop.StudentList.Add(currentStudentInLoop);
+                            currentCohortInLoop.InstructorList.Add(currentInstructorInLoop);
+                            
                             cohortList.Add(currentCohortInLoop);
-                        } else
-                        {
-                            // Add the student to the cohort that's already in the list
-                            // Add the instructor to the cohort that's already in the list
-                            Cohort cohortAlreadyInTheList = cohortList.FirstOrDefault(c => c.Id == currentCohortInLoop.Id);
-
-                            // If the student is NOT already in this cohort's list, add them
-                            if (currentStudent != null && !cohortAlreadyInTheList.StudentList.Any(singleStudent => singleStudent.Id == currentStudent.Id))
-                            {
-                                cohortAlreadyInTheList.StudentList.Add(currentStudent);
-                            }
-
-                            // If the instructor is NOT already in the cohort's list, add them
-                            if (currentInstructor != null && !cohortAlreadyInTheList.InstructorList.Any(singleInstructor=> singleInstructor.Id == currentInstructor.Id))
-                            {
-                                cohortAlreadyInTheList.InstructorList.Add(currentInstructor);
-                            }
-
-                            
-                            
                         }
-                        
+                        else
+                        {
+                            // don't add the cohort to the list
+                            Cohort cohortAlreadyInList = cohortList.Find(c => c.Id == currentCohortInLoop.Id);
+
+                            bool instructorExists = currentInstructorInLoop != null;
+
+                            bool instructorIsNotInList = !currentCohortInLoop.InstructorList.Any(i => i.Id == currentInstructorInLoop.Id);
+                            // Check and see if the instructor is already in the cohort's instructore list 
+                            // If the instructor is NOT in the list, add them
+                            if (instructorExists && instructorIsNotInList)
+                            {
+                                cohortAlreadyInList.InstructorList.Add(currentInstructorInLoop);
+                            }
+
+                                // check and see if the student is already in the cohort's student list
+                                // If NOT, add them
+                            }
 
 
                     }
